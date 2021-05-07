@@ -1,6 +1,5 @@
 from copy import deepcopy
-import queue
-from collections import deque
+
 
 class Puzzle:
     def __init__(self, board_config):
@@ -96,8 +95,27 @@ class Puzzle:
         explored = []
 
         while len(frontier) != 0:
+            # queue
             node = frontier.pop(0)
-            explored.append(node.board_config)
+            explored.append(node)
+
+            if node.is_goal():
+                print(node.board_config)
+                break
+
+            for child in node.expand():
+                if child not in frontier and child not in explored:
+                    frontier.append(child)
+
+    def dfs(self):
+        node = Puzzle(deepcopy(self.board_config))
+        frontier = [node]
+        explored = []
+
+        while len(frontier) != 0:
+            # stack
+            node = frontier.pop()
+            explored.append(node)
 
             if node.is_goal():
                 print(node.board_config)
@@ -112,8 +130,8 @@ goal = [[0, 1, 2],
         [3, 4, 5],
         [6, 7, 8]]
 
-board = Puzzle([[1, 2, 5],
-                [3, 7, 4],
-                [6, 0, 8]])
+board = Puzzle([[0, 1, 2],
+                [4, 3, 5],
+                [6, 7, 8]])
 
-board.bfs()
+board.dfs()
