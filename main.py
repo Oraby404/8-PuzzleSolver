@@ -1,6 +1,6 @@
 from copy import deepcopy
 import queue
-
+from collections import deque
 
 class Puzzle:
     def __init__(self, board_config):
@@ -92,13 +92,11 @@ class Puzzle:
 
     def bfs(self):
         node = Puzzle(deepcopy(self.board_config))
-        frontier = queue.Queue()
-        frontier.put(node)
-        frontier_boards = [node.board_config]
+        frontier = [node]
         explored = []
 
-        while not frontier.empty():
-            node = frontier.get()
+        while len(frontier) != 0:
+            node = frontier.pop(0)
             explored.append(node.board_config)
 
             if node.is_goal():
@@ -106,16 +104,16 @@ class Puzzle:
                 break
 
             for child in node.expand():
-                if child.board_config not in frontier_boards and child.board_config not in explored:
-                    frontier.put(child)
+                if child not in frontier and child not in explored:
+                    frontier.append(child)
 
 
 goal = [[0, 1, 2],
         [3, 4, 5],
         [6, 7, 8]]
 
-board = Puzzle([[1, 2, 3],
-                [4, 0, 5],
-                [6, 7, 8]])
+board = Puzzle([[1, 2, 5],
+                [3, 7, 4],
+                [6, 0, 8]])
 
 board.bfs()
