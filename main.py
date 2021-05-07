@@ -1,4 +1,5 @@
 from copy import deepcopy
+import queue
 
 
 class Puzzle:
@@ -86,28 +87,35 @@ class Puzzle:
 
         return self.children
 
+    def is_goal(self):
+        return list(self.board_config) == goal
+
+    def bfs(self):
+        node = Puzzle(deepcopy(self.board_config))
+        frontier = queue.Queue()
+        frontier.put(node)
+        frontier_boards = [node.board_config]
+        explored = []
+
+        while not frontier.empty():
+            node = frontier.get()
+            explored.append(node.board_config)
+
+            if node.is_goal():
+                print(node.board_config)
+                break
+
+            for child in node.expand():
+                if child.board_config not in frontier_boards and child.board_config not in explored:
+                    frontier.put(child)
+
 
 goal = [[0, 1, 2],
         [3, 4, 5],
         [6, 7, 8]]
 
-board = Puzzle([[1, 2, 5],
-                [3, 0, 4],
+board = Puzzle([[1, 2, 3],
+                [4, 0, 5],
                 [6, 7, 8]])
 
-print(board.blank_row)
-print(board.blank_col)
-
-board.children = board.expand()
-
-print(board.children[0].blank_row)
-print(board.children[0].blank_col)
-
-print(board.children[1].blank_row)
-print(board.children[1].blank_col)
-
-print(board.children[2].blank_row)
-print(board.children[2].blank_col)
-
-print(board.children[3].blank_row)
-print(board.children[3].blank_col)
+board.bfs()
