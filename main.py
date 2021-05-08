@@ -70,21 +70,21 @@ class Puzzle:
         if len(self.children) == 0:
             last_action = self.action
 
-            up_child = self.up()
-            if up_child is not None and last_action != "down":
-                self.children.append(up_child)
-
-            down_child = self.down()
-            if down_child is not None and last_action != "up":
-                self.children.append(down_child)
+            right_child = self.right()
+            if right_child is not None and last_action != "left":
+                self.children.append(right_child)
 
             left_child = self.left()
             if left_child is not None and last_action != "right":
                 self.children.append(left_child)
 
-            right_child = self.right()
-            if right_child is not None and last_action != "left":
-                self.children.append(right_child)
+            down_child = self.down()
+            if down_child is not None and last_action != "up":
+                self.children.append(down_child)
+
+            up_child = self.up()
+            if up_child is not None and last_action != "down":
+                self.children.append(up_child)
 
         return self.children
 
@@ -94,6 +94,7 @@ class Puzzle:
     def bfs(self):
         node = Puzzle(deepcopy(self.board_config), action="Initial")
         frontier = [node]
+        frontier_boards = [node.board_config]
         explored = []
         path = []
         explored_nodes = 0
@@ -102,7 +103,8 @@ class Puzzle:
         while len(frontier) != 0:
             # queue
             node = frontier.pop(0)
-            explored.append(node)
+            frontier_boards.pop(0)
+            explored.append(node.board_config)
             explored_nodes += 1
 
             if node.is_goal():
@@ -118,13 +120,15 @@ class Puzzle:
                 break
 
             for child in node.expand():
-                if child not in frontier and child not in explored:
+                if child.board_config not in frontier_boards and child.board_config not in explored:
                     child.parent = node
                     frontier.append(child)
+                    frontier_boards.append(child.board_config)
 
     def dfs(self):
         node = Puzzle(deepcopy(self.board_config), action="Initial")
         frontier = [node]
+        frontier_boards = [node.board_config]
         explored = []
         path = []
         explored_nodes = 0
@@ -133,7 +137,8 @@ class Puzzle:
         while len(frontier) != 0:
             # stack
             node = frontier.pop()
-            explored.append(node)
+            frontier_boards.pop()
+            explored.append(node.board_config)
             explored_nodes += 1
 
             if node.is_goal():
@@ -149,9 +154,10 @@ class Puzzle:
                 break
 
             for child in node.expand():
-                if child not in frontier and child not in explored:
+                if child.board_config not in frontier_boards and child.board_config not in explored:
                     child.parent = node
                     frontier.append(child)
+                    frontier_boards.append(child.board_config)
 
     def is_solvable(self):
         inv_count = 0
@@ -167,11 +173,23 @@ goal = [[0, 1, 2],
         [3, 4, 5],
         [6, 7, 8]]
 
-board = Puzzle([[1, 4, 2],
-                [6, 5, 8],
-                [7, 3, 0]], action="Initial")
+board = Puzzle([[1, 2, 5],
+                [3, 4, 0],
+                [6, 7, 8]], action="Initial")
 
-if board.is_solvable():
-    board.bfs()
-else:
-    print("Not Solvable Puzzle")
+board1 = Puzzle([[1, 4, 2],
+                 [6, 5, 8],
+                 [7, 3, 0]], action="Initial")
+
+board2 = Puzzle([[1, 0, 2],
+                 [7, 5, 4],
+                 [8, 6, 3]], action="Initial")
+
+board3 = Puzzle([[3, 1, 2],
+                 [6, 4, 5],
+                 [0, 7, 8]], action="Initial")
+
+# if board.is_solvable():
+board3.dfs()
+# else:
+# print("Not Solvable Puzzle")
