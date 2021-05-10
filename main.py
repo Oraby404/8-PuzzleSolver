@@ -185,7 +185,59 @@ class Puzzle:
         print("Not Solvable Puzzle")
 
     # Depth-First Search Algorithm
-    def dfs(self, depth):
+    def dfs(self):
+        # check if the current board configuration is solvable
+        if self.is_solvable():
+            # push the starting node in the frontier stack
+            frontier = [self]
+            # frontier boards are the the boards of the nodes that are already in the frontier stack
+            # this list is needed for comparison since we can't compare objects directly
+            frontier_boards = [self.board_config]
+            # list of explored board configurations to avoid repetition and infinite loops
+            explored = []
+            # max search depth the tree reached
+            max_search_depth = 0
+            # number of explored node , the ones in the frontier are not included
+            explored_nodes = 0
+            # start time of the search
+            start_time = time.time()
+
+            # loop until the frontier stack is empty
+            while len(frontier) != 0:
+                # pop node from the stack
+                self = frontier.pop()
+                # also from the frontier boards list
+                frontier_boards.pop()
+                # add the node to the explored list
+                explored.append(self.board_config)
+                # increment the explored node by 1
+                explored_nodes += 1
+
+                # check if the current node is the goal configuration
+                if self.is_goal():
+                    # if yes display the search analysis and return 1
+                    self.display(start_time, explored_nodes, max_search_depth)
+                    return 1
+
+                # if the node is not the goal , expand the node to get all possible children
+                for child in self.expand():
+                    # check if the child board is in the frontier and explored lists or not
+                    if child.board_config not in frontier_boards and child.board_config not in explored:
+                        # set the child node's parent
+                        child.parent = self
+                        # set the cost to reach this node
+                        child.cost = child.parent.cost + 1
+                        # push the child in the frontier list and frontier boards
+                        frontier.append(child)
+                        frontier_boards.append(child.board_config)
+                        # check for the max search depth
+                        if child.cost > max_search_depth:
+                            max_search_depth = child.cost
+            return 0
+        print("Not Solvable Puzzle")
+
+    # Depth-Limited Search Algorithm
+    def dls(self, depth):
         # check if the current board configuration is solvable
         if self.is_solvable():
             # push the starting node in the frontier stack
@@ -246,7 +298,7 @@ class Puzzle:
             # start with depth = 0 to depth = sys.maxsize
             for depth in range(sys.maxsize):
                 # DLS with limit = depth
-                if self.dfs(depth):
+                if self.dls(depth):
                     return 1
         print("Not Solvable Puzzle")
 
@@ -422,11 +474,13 @@ board4 = Puzzle([[4, 3, 2],
 
 print("Using BFS Search\n")
 board1.bfs()
-print("     ****\nUsing DLS Search\n")
-board1.dfs(31)
-print("     ****\nUsing IDS Search\n")
-board1.ids()
+print("     ****\nUsing DFS Search\n")
+board1.dfs()
 print("     ****\nUsing A* Search with Manhattan heuristic\n")
 board1.a_star("manhattan")
 print("     ****\nUsing A* Search with Euclidean heuristic\n")
 board1.a_star("euclidean")
+print("     ****\nUsing DLS Search\n")
+board1.dls(8)
+print("     ****\nUsing IDS Search\n")
+board1.ids()
