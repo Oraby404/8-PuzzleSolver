@@ -154,12 +154,7 @@ class Puzzle:
         start_time = time.time()
 
         while len(frontier) != 0:
-
-            if h_function == "euclidean":
-                node.euclidean()
-            else:
-                node.manhattan()
-            # sorted list
+            # heap
             frontier.sort(key=lambda node: node.key)
             node = frontier.pop(0)
             frontier_boards.remove(node.board_config)
@@ -171,11 +166,23 @@ class Puzzle:
                 break
 
             for child in node.expand():
+                child.parent = node
+                child.cost = child.parent.cost + 1
+                if h_function == "euclidean":
+                    child.euclidean()
+                else:
+                    child.manhattan()
+
                 if child.board_config not in frontier_boards and child.board_config not in explored:
-                    child.parent = node
-                    child.cost = child.parent.cost + 1
                     frontier.append(child)
                     frontier_boards.append(child.board_config)
+
+                elif child.board_config in frontier_boards:
+                    for i in range(0, len(frontier)):
+                        if child.board_config == frontier[i].board_config:
+                            break
+                    if child.key < frontier[i].key:
+                        frontier[i] = child
 
     def manhattan(self):
         for i in range(0, 3):
@@ -242,6 +249,7 @@ board3 = Puzzle([[4, 1, 3],
                  [7, 5, 8]], action="Initial")
 
 # if board.is_solvable():
-board1.a_star("manhattan")
+board2.a_star("manhattan")
+# board1.a_star("euclidean")
 # else:
 #   print("Not Solvable Puzzle")
