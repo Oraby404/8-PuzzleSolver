@@ -98,7 +98,7 @@ class Puzzle:
         frontier = [node]
         frontier_boards = [node.board_config]
         explored = []
-        path = []
+
         explored_nodes = 0
         start_time = time.time()
 
@@ -110,16 +110,7 @@ class Puzzle:
             explored_nodes += 1
 
             if node.is_goal():
-                cost = node.cost
-                running_time = time.time() - start_time
-                while node.action != "Initial":
-                    path.append(node.action)
-                    node = node.parent
-                print("Path to Goal :", path[::-1])
-                print("Cost of Path : ", cost)
-                print("Nodes Expanded : ", explored_nodes)
-                print("Search Depth : ", len(path))
-                print("Running Time : ", running_time)
+                node.display(start_time, explored_nodes)
                 break
 
             for child in node.expand():
@@ -134,7 +125,7 @@ class Puzzle:
         frontier = [node]
         frontier_boards = [node.board_config]
         explored = []
-        path = []
+
         explored_nodes = 0
         start_time = time.time()
 
@@ -146,16 +137,54 @@ class Puzzle:
             explored_nodes += 1
 
             if node.is_goal():
-                cost = node.cost
-                running_time = time.time() - start_time
-                while node.action != "Initial":
-                    path.append(node.action)
-                    node = node.parent
-                print("Path to Goal :", path[::-1])
-                print("Cost of Path : ", cost)
-                print("Nodes Expanded : ", explored_nodes)
-                print("Search Depth : ", len(path))
-                print("Running Time : ", running_time)
+                node.display(start_time, explored_nodes)
+                break
+
+            for child in node.expand():
+                if child.board_config not in frontier_boards and child.board_config not in explored:
+                    child.parent = node
+                    child.cost = child.parent.cost + 1
+                    frontier.append(child)
+                    frontier_boards.append(child.board_config)
+
+    def manhattan(self):
+        for i in range(0, 3):
+            for j in range(0, 3):
+                if self.board_config[i][j] != 0:
+                    x_goal = (self.board_config[i][j] // 3)
+                    y_goal = (self.board_config[i][j] % 3)
+                    self.heuristic += (abs(i - x_goal) + abs(j - y_goal))
+        self.key = self.cost + self.heuristic
+
+    def euclidean(self):
+        for i in range(0, 3):
+            for j in range(0, 3):
+                if self.board_config[i][j] != 0:
+                    x_goal = (self.board_config[i][j] // 3)
+                    y_goal = (self.board_config[i][j] % 3)
+                    self.heuristic += math.sqrt(pow(i - x_goal, 2) + pow(j - y_goal, 2))
+        self.key = self.cost + self.heuristic
+
+    def astar_manhattan(self):
+        node = Puzzle(deepcopy(self.board_config), action="Initial")
+        frontier = [node]
+        frontier_boards = [node.board_config]
+        explored = []
+
+        explored_nodes = 0
+        start_time = time.time()
+
+        while len(frontier) != 0:
+            # sorted list
+            node.manhattan()
+            frontier.sort(key=lambda node: node.key)
+            node = frontier.pop(0)
+            frontier_boards.remove(node.board_config)
+            explored.append(node.board_config)
+            explored_nodes += 1
+
+            if node.is_goal():
+                node.display(start_time, explored_nodes)
                 break
 
             for child in node.expand():
@@ -174,99 +203,39 @@ class Puzzle:
         # not solvable if odd count
         return inv_count % 2 == 0
 
-    def manhattan(self):
-
-        for i in range(1, 4):
-            for j in range(1, 4):
-                x_goal = (goal[i][j] // 3) + 1
-                y_goal = (goal[i][j] % 3) + 1
-                self.heuristic += abs(i - x_goal) + abs(j - y_goal)
-
-        key = self.cost + self.heuristic
-        return key
-
-    def h_manhattan_dist(self):
-        manh_dist = []
-        manhattan_dist = 0
-        for i in range(0, 3):
-            for j in range(0, 3):
-                manh_dist.append(goal[i][j])
-
-        for i in range(0, 3):
-            for j in range(0, 3):
-                current_coor = self.board_config[i][j]
-                x_coor = i
-                y_coor = j
-                index = manh_dist.index(current_coor)
-                x_goal, y_goal = index // 3, index % 3
-                if current_coor != 0:
-                    manhattan_dist += (math.fabs(x_goal - x_coor) + math.fabs(y_goal - y_coor))
-
-        return manhattan_dist
-
-    def euclidean(self):
-        self.heuristic = math.sqrt(pow(self.blank_row - 1, 2) + pow(self.blank_col - 1, 2))
-        key = self.cost + self.heuristic
-        return key
-
-    def astar_manhattan(self):
-        node = Puzzle(deepcopy(self.board_config), action="Initial")
-        frontier = [node]
-        frontier_boards = [node.board_config]
-        explored = []
+    def display(self, start_time, explored_nodes):
+        running_time = time.time() - start_time
         path = []
-        explored_nodes = 0
-        start_time = time.time()
-
-        while len(frontier) != 0:
-            # sorted list
-            node.key = node.h_manhattan_dist()
-            frontier.sort(key=lambda node: node.key)
-            node = frontier.pop(0)
-            frontier_boards.remove(node.board_config)
-            explored.append(node)
-            explored_nodes += 1
-
-            if node.is_goal():
-                running_time = time.time() - start_time
-                cost = node.cost
-                while node.action != "Initial":
-                    path.append(node.action)
-                    node = node.parent
-                print("Path to Goal :", path[::-1])
-                print("Cost of Path : ", cost)
-                print("Nodes Expanded : ", explored_nodes)
-                print("Search Depth : ", len(path))
-                print("Running Time : ", running_time)
-                break
-
-            for child in node.expand():
-                if child.board_config not in frontier_boards and child.board_config not in explored:
-                    child.parent = node
-                    child.cost = child.parent.cost + 1
-                    frontier.append(child)
-                    frontier_boards.append(child.board_config)
+        cost = self.cost
+        while self.action != "Initial":
+            path.append(self.action)
+            self = self.parent
+        print("Path to Goal :", path[::-1])
+        print("Cost of Path : ", cost)
+        print("Nodes Expanded : ", explored_nodes)
+        print("Search Depth : ", len(path))
+        print("Running Time : ", running_time)
 
 
 goal = [[0, 1, 2],
         [3, 4, 5],
         [6, 7, 8]]
 
-board = Puzzle([[1, 2, 5],
-                [3, 4, 0],
+board = Puzzle([[1, 4, 2],
+                [3, 0, 5],
                 [6, 7, 8]], action="Initial")
 
 board1 = Puzzle([[1, 4, 2],
                  [6, 5, 8],
                  [7, 3, 0]], action="Initial")
 
-board2 = Puzzle([[4, 3, 2],
-                 [6, 5, 0],
-                 [7, 8, 1]], action="Initial")
+board2 = Puzzle([[1, 2, 0],
+                 [3, 4, 5],
+                 [6, 7, 8]], action="Initial")
 
-board3 = Puzzle([[1, 0, 2],
-                 [7, 5, 4],
-                 [8, 6, 3]], action="Initial")
+board3 = Puzzle([[1, 2, 3],
+                 [5, 6, 0],
+                 [8, 7, 4]], action="Initial")
 
 # if board.is_solvable():
 board3.astar_manhattan()
