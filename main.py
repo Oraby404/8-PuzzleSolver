@@ -423,7 +423,7 @@ board4 = Puzzle([[4, 3, 2],
 print("Using BFS Search\n")
 board1.bfs()
 print("     ****\nUsing DLS Search\n")
-board1.dfs(12)
+board1.dfs(31)
 print("     ****\nUsing IDS Search\n")
 board1.ids()
 print("     ****\nUsing A* Search with Manhattan heuristic\n")
