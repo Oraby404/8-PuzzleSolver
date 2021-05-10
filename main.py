@@ -90,9 +90,6 @@ class Puzzle:
 
         return self.children
 
-    def is_goal(self):
-        return list(self.board_config) == goal
-
     def bfs(self):
         node = Puzzle(deepcopy(self.board_config), action="Initial")
         frontier = [node]
@@ -147,6 +144,39 @@ class Puzzle:
                     frontier.append(child)
                     frontier_boards.append(child.board_config)
 
+    def a_star(self, h_function):
+        node = Puzzle(deepcopy(self.board_config), action="Initial")
+        frontier = [node]
+        frontier_boards = [node.board_config]
+        explored = []
+
+        explored_nodes = 0
+        start_time = time.time()
+
+        while len(frontier) != 0:
+
+            if h_function == "euclidean":
+                node.euclidean()
+            else:
+                node.manhattan()
+            # sorted list
+            frontier.sort(key=lambda node: node.key)
+            node = frontier.pop(0)
+            frontier_boards.remove(node.board_config)
+            explored.append(node.board_config)
+            explored_nodes += 1
+
+            if node.is_goal():
+                node.display(start_time, explored_nodes)
+                break
+
+            for child in node.expand():
+                if child.board_config not in frontier_boards and child.board_config not in explored:
+                    child.parent = node
+                    child.cost = child.parent.cost + 1
+                    frontier.append(child)
+                    frontier_boards.append(child.board_config)
+
     def manhattan(self):
         for i in range(0, 3):
             for j in range(0, 3):
@@ -165,35 +195,6 @@ class Puzzle:
                     self.heuristic += math.sqrt(pow(i - x_goal, 2) + pow(j - y_goal, 2))
         self.key = self.cost + self.heuristic
 
-    def astar_manhattan(self):
-        node = Puzzle(deepcopy(self.board_config), action="Initial")
-        frontier = [node]
-        frontier_boards = [node.board_config]
-        explored = []
-
-        explored_nodes = 0
-        start_time = time.time()
-
-        while len(frontier) != 0:
-            # sorted list
-            node.manhattan()
-            frontier.sort(key=lambda node: node.key)
-            node = frontier.pop(0)
-            frontier_boards.remove(node.board_config)
-            explored.append(node.board_config)
-            explored_nodes += 1
-
-            if node.is_goal():
-                node.display(start_time, explored_nodes)
-                break
-
-            for child in node.expand():
-                if child.board_config not in frontier_boards and child.board_config not in explored:
-                    child.parent = node
-                    child.cost = child.parent.cost + 1
-                    frontier.append(child)
-                    frontier_boards.append(child.board_config)
-
     def is_solvable(self):
         inv_count = 0
         for i in range(0, 2):
@@ -202,6 +203,9 @@ class Puzzle:
                     inv_count += 1
         # not solvable if odd count
         return inv_count % 2 == 0
+
+    def is_goal(self):
+        return list(self.board_config) == goal
 
     def display(self, start_time, explored_nodes):
         running_time = time.time() - start_time
@@ -221,23 +225,23 @@ goal = [[0, 1, 2],
         [3, 4, 5],
         [6, 7, 8]]
 
-board = Puzzle([[1, 4, 2],
-                [3, 0, 5],
+board = Puzzle([[1, 2, 5],
+                [3, 4, 0],
                 [6, 7, 8]], action="Initial")
 
 board1 = Puzzle([[1, 4, 2],
                  [6, 5, 8],
                  [7, 3, 0]], action="Initial")
 
-board2 = Puzzle([[1, 2, 0],
-                 [3, 4, 5],
-                 [6, 7, 8]], action="Initial")
+board2 = Puzzle([[1, 0, 2],
+                 [7, 5, 4],
+                 [8, 6, 3]], action="Initial")
 
-board3 = Puzzle([[1, 2, 3],
-                 [5, 6, 0],
-                 [8, 7, 4]], action="Initial")
+board3 = Puzzle([[4, 1, 3],
+                 [0, 2, 6],
+                 [7, 5, 8]], action="Initial")
 
 # if board.is_solvable():
-board3.astar_manhattan()
+board1.a_star("manhattan")
 # else:
 #   print("Not Solvable Puzzle")
