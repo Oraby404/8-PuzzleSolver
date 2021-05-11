@@ -101,32 +101,56 @@ class Puzzle:
             return new_node
 
     # function expand creates all possible children nodes give any node
-    def expand(self):
+    def expand(self,direction):
         # make sure the children list is empty
         if len(self.children) == 0:
             # save the action that brought the current node to avoid adding
             # its reverse action in the children nodes
             last_action = self.action
 
-            # get the child generated from moving blank tile up
-            up_child = self.up()
-            if up_child is not None and last_action != "down":
-                self.children.append(up_child)
+            # if reverse use RLDU
+            if direction == "reverse":
+                # get the child generated from moving blank tile left
+                right_child = self.right()
+                if right_child is not None and last_action != "left":
+                    self.children.append(right_child)
 
-            # get the child generated from moving blank tile down
-            down_child = self.down()
-            if down_child is not None and last_action != "up":
-                self.children.append(down_child)
+                # get the child generated from moving blank tile right
+                left_child = self.left()
+                if left_child is not None and last_action != "right":
+                    self.children.append(left_child)
 
-            # get the child generated from moving blank tile right
-            left_child = self.left()
-            if left_child is not None and last_action != "right":
-                self.children.append(left_child)
+                # get the child generated from moving blank tile down
+                down_child = self.down()
+                if down_child is not None and last_action != "up":
+                    self.children.append(down_child)
 
-            # get the child generated from moving blank tile left
-            right_child = self.right()
-            if right_child is not None and last_action != "left":
-                self.children.append(right_child)
+                # get the child generated from moving blank tile up
+                up_child = self.up()
+                if up_child is not None and last_action != "down":
+                    self.children.append(up_child)
+
+            # use normal order  of UDLR
+            else:
+                # get the child generated from moving blank tile up
+                up_child = self.up()
+                if up_child is not None and last_action != "down":
+                    self.children.append(up_child)
+
+                # get the child generated from moving blank tile down
+                down_child = self.down()
+                if down_child is not None and last_action != "up":
+                    self.children.append(down_child)
+
+                # get the child generated from moving blank tile right
+                left_child = self.left()
+                if left_child is not None and last_action != "right":
+                    self.children.append(left_child)
+
+                # get the child generated from moving blank tile left
+                right_child = self.right()
+                if right_child is not None and last_action != "left":
+                    self.children.append(right_child)
 
         # return a list of children generated , all of type "Puzzle"
         return self.children
@@ -167,7 +191,7 @@ class Puzzle:
                     return 1
 
                 # if the node is not the goal , expand the node to get all possible children
-                for child in self.expand():
+                for child in self.expand("forward"):
                     # check if the child board is in the frontier and explored lists or not
                     if child.board_config not in frontier_boards and child.board_config not in explored:
                         # set the child node's parent
@@ -220,7 +244,7 @@ class Puzzle:
                     return 1
 
                 # if the node is not the goal , expand the node to get all possible children
-                for child in self.expand():
+                for child in self.expand("reverse"):
                     # check if the child board is in the frontier and explored lists or not
                     if child.board_config not in frontier_boards and child.board_config not in explored:
                         # set the child node's parent
@@ -272,7 +296,7 @@ class Puzzle:
                     return 1
 
                 # if the node is not the goal , expand the node to get all possible children
-                for child in self.expand():
+                for child in self.expand("reverse"):
                     # check if the child board is in the frontier and explored lists or not
                     if child.board_config not in frontier_boards and child.board_config not in explored:
                         # set the child node's parent
@@ -291,7 +315,8 @@ class Puzzle:
             return 0
         print("Not Solvable Puzzle")
 
-    # Iterative-Deepening Search
+        # Iterative-Deepening Search
+
     def ids(self):
         # check if the current board configuration is solvable
         if self.is_solvable():
@@ -309,9 +334,6 @@ class Puzzle:
         if self.is_solvable():
             # insert the starting node in the frontier list
             frontier = [self]
-            # frontier boards are the the boards of the nodes that are already in the frontier stack
-            # this list is needed for comparison since we can't compare objects directly
-            frontier_boards = [self.board_config]
             # list of explored board configurations to avoid repetition and infinite loops
             explored = []
             # max search depth the tree reached
@@ -327,8 +349,6 @@ class Puzzle:
                 frontier.sort(key=lambda node: node.key)
                 # dequeue node from the heap
                 self = frontier.pop(0)
-                # also from the frontier boards list
-                frontier_boards.remove(self.board_config)
                 # add the node to the explored list
                 explored.append(self.board_config)
                 # increment the explored node by 1
@@ -341,7 +361,7 @@ class Puzzle:
                     return 1
 
                 # if the node is not the goal , expand the node to get all possible children
-                for child in self.expand():
+                for child in self.expand("forward"):
                     # set the child node's parent
                     child.parent = self
                     # set the cost to reach this node
@@ -353,20 +373,17 @@ class Puzzle:
                         child.manhattan()
 
                     # check if the child board is in the frontier and explored lists or not
-                    if child.board_config not in frontier_boards and child.board_config not in explored:
-                        # enqueue the child in the frontier list and frontier boards
+                    if child not in frontier and child.board_config not in explored:
+                        # enqueue the child in the frontier list
                         frontier.append(child)
-                        frontier_boards.append(child.board_config)
                         # check for the max search depth
                         if child.cost > max_search_depth:
                             max_search_depth = child.cost
 
                     # if the board is in the frontier list , check for possible decrease key
-                    elif child.board_config in frontier_boards:
+                    elif child in frontier:
                         # get the index of the node in frontier list
-                        for i in range(0, len(frontier)):
-                            if child.board_config == frontier[i].board_config:
-                                break
+                        i = frontier.index(child)
                         # if the node key is less than the one in the frontier list,
                         # decrease key
                         if child.key < frontier[i].key:
@@ -447,14 +464,19 @@ class Puzzle:
         print("Max Search Depth : ", max_search_depth)
         print("Running Time : ", running_time)
 
+    def __eq__(self, other):
+        if (isinstance(other, Puzzle)):
+            return self.board_config == other.board_config
+        return false
+
 
 goal = [[0, 1, 2],
         [3, 4, 5],
         [6, 7, 8]]
 
-board = Puzzle([[1, 2, 5],
-                [3, 0, 4],
-                [6, 7, 8]], action="Initial")
+board = Puzzle([[3, 1, 2],
+                [6, 4, 5],
+                [0, 7, 8]], action="Initial")
 
 board1 = Puzzle([[1, 4, 2],
                  [6, 5, 8],
@@ -475,12 +497,10 @@ board4 = Puzzle([[4, 3, 2],
 print("Using BFS Search\n")
 board1.bfs()
 print("     ****\nUsing DFS Search\n")
-board1.dfs()
+board.dfs()
 print("     ****\nUsing A* Search with Manhattan heuristic\n")
 board1.a_star("manhattan")
 print("     ****\nUsing A* Search with Euclidean heuristic\n")
 board1.a_star("euclidean")
-print("     ****\nUsing DLS Search\n")
-board1.dls(8)
 print("     ****\nUsing IDS Search\n")
 board1.ids()
