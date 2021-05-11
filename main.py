@@ -101,56 +101,33 @@ class Puzzle:
             return new_node
 
     # function expand creates all possible children nodes give any node
-    def expand(self,direction):
+    def expand(self):
         # make sure the children list is empty
         if len(self.children) == 0:
             # save the action that brought the current node to avoid adding
             # its reverse action in the children nodes
             last_action = self.action
 
-            # if reverse use RLDU
-            if direction == "reverse":
-                # get the child generated from moving blank tile left
-                right_child = self.right()
-                if right_child is not None and last_action != "left":
-                    self.children.append(right_child)
+            # get the child generated from moving blank tile left
+            right_child = self.right()
+            if right_child is not None and last_action != "left":
+                self.children.append(right_child)
 
-                # get the child generated from moving blank tile right
-                left_child = self.left()
-                if left_child is not None and last_action != "right":
-                    self.children.append(left_child)
+            # get the child generated from moving blank tile right
+            left_child = self.left()
+            if left_child is not None and last_action != "right":
+                self.children.append(left_child)
 
-                # get the child generated from moving blank tile down
-                down_child = self.down()
-                if down_child is not None and last_action != "up":
-                    self.children.append(down_child)
+            # get the child generated from moving blank tile down
+            down_child = self.down()
+            if down_child is not None and last_action != "up":
+                self.children.append(down_child)
 
-                # get the child generated from moving blank tile up
-                up_child = self.up()
-                if up_child is not None and last_action != "down":
-                    self.children.append(up_child)
+            # get the child generated from moving blank tile up
+            up_child = self.up()
+            if up_child is not None and last_action != "down":
+                self.children.append(up_child)
 
-            # use normal order  of UDLR
-            else:
-                # get the child generated from moving blank tile up
-                up_child = self.up()
-                if up_child is not None and last_action != "down":
-                    self.children.append(up_child)
-
-                # get the child generated from moving blank tile down
-                down_child = self.down()
-                if down_child is not None and last_action != "up":
-                    self.children.append(down_child)
-
-                # get the child generated from moving blank tile right
-                left_child = self.left()
-                if left_child is not None and last_action != "right":
-                    self.children.append(left_child)
-
-                # get the child generated from moving blank tile left
-                right_child = self.right()
-                if right_child is not None and last_action != "left":
-                    self.children.append(right_child)
 
         # return a list of children generated , all of type "Puzzle"
         return self.children
@@ -191,7 +168,7 @@ class Puzzle:
                     return 1
 
                 # if the node is not the goal , expand the node to get all possible children
-                for child in self.expand("forward"):
+                for child in self.expand():
                     # check if the child board is in the frontier and explored lists or not
                     if child.board_config not in frontier_boards and child.board_config not in explored:
                         # set the child node's parent
@@ -244,7 +221,7 @@ class Puzzle:
                     return 1
 
                 # if the node is not the goal , expand the node to get all possible children
-                for child in self.expand("reverse"):
+                for child in self.expand():
                     # check if the child board is in the frontier and explored lists or not
                     if child.board_config not in frontier_boards and child.board_config not in explored:
                         # set the child node's parent
@@ -257,6 +234,7 @@ class Puzzle:
                         # check for the max search depth
                         if child.cost > max_search_depth:
                             max_search_depth = child.cost
+
             return 0
         print("Not Solvable Puzzle")
 
@@ -296,7 +274,7 @@ class Puzzle:
                     return 1
 
                 # if the node is not the goal , expand the node to get all possible children
-                for child in self.expand("reverse"):
+                for child in self.expand():
                     # check if the child board is in the frontier and explored lists or not
                     if child.board_config not in frontier_boards and child.board_config not in explored:
                         # set the child node's parent
@@ -361,7 +339,7 @@ class Puzzle:
                     return 1
 
                 # if the node is not the goal , expand the node to get all possible children
-                for child in self.expand("forward"):
+                for child in self.expand():
                     # set the child node's parent
                     child.parent = self
                     # set the cost to reach this node
@@ -495,12 +473,12 @@ board4 = Puzzle([[4, 3, 2],
                  [7, 8, 1]], action="Initial")
 
 print("Using BFS Search\n")
-board1.bfs()
+board.bfs()
 print("     ****\nUsing DFS Search\n")
 board.dfs()
 print("     ****\nUsing A* Search with Manhattan heuristic\n")
-board1.a_star("manhattan")
+board.a_star("manhattan")
 print("     ****\nUsing A* Search with Euclidean heuristic\n")
-board1.a_star("euclidean")
+board.a_star("euclidean")
 print("     ****\nUsing IDS Search\n")
-board1.ids()
+board.ids()
